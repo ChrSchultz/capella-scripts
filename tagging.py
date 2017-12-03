@@ -1,4 +1,4 @@
-# -*- coding utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 >>>  Tagging 
 
@@ -19,32 +19,85 @@ from xml.dom.minidom import parseString, NodeList, Node, Element
 from caplib.rational import Rational
 from caplib.capDOM import ScoreChange
 
+doc = parseString('<score/>')
+
+def gotoChild(self, name, new=False):
+    newEl = None
+    if new:
+        pass
+    else:
+        for child in self.childNodes:
+            if child.nodeType == child.ELEMENT_NODE and child.tagName == name:
+                newEl = child
+                break
+    if newEl == None:
+        newEl = doc.createElement(name)
+        self.appendChild(newEl)
+    return newEl
+Node.gotoChild = new.instancemethod(gotoChild,None,Node)
+
+def gotoChildN( el, name, new=False):
+    newEl = None
+    if new:
+        pass
+    else:
+        for child in el.childNodes:
+            if child.NodeType == child.ELEMENT_NODE and child.tagName == name:
+                newEl = child
+                break
+    if newEl == None:
+        newEl = doc.createElement(name)
+        el.appendChild(newEl)
+    return newEl
 
 
-def insTags(tag):
-    if activeScore():
-       note = activeScore().cursorObj()
-       for drawObjs in note.getElementByTagName('drawObj'):
-          for basic in drawObjs.getElementByTagName('basic'):
-            if basic.hasAttributes() and basic.hasAttribute('tag') == None:
-                basic.setAtrribute('tag', tag)
 
+def insTags(tag, score):
+   
+  note = cursorObj()
+ 
+  #voice = activeScore().system(0).staff(0).voice(0)
+  #chord = voice.noteObj(0)
+  
+  for ch in score.getElementsByTagName('chord'):
+     for dObjs in ch.getElementsByTagName('drawObjects'):
+        for dObj in dObjs.getElementsByTagName('drawObj'):
+            #messageBox('','%s' % dObj)
+            basic = dObj.gotoChild('basic')
+           # messageBox('','%s' % basic)
+            bl = basic.hasAttributes()
+            if bl : b = 'True'
+            else: b = 'False'
+           # messageBox('', '%s' % b)
+            if basic.hasAttributes():
+                #messageBox('Eingabe:', 'tag: %s' % tag)
+                basic.setAttribute('tag', tag)
+    
+        
+            
+     #if chrd == chord:
+     #messageBox('', 'note: %s chord %s chrd: %s' % ( note, chord, chrd))
+     #break
+      
+    
+    
 def UserInput():
-    label1 = 'Einzufügenden Tag'
-    edit1 = Edit('12345-4096', width=10)
-    hbox = HBox(label1, edit1, width=40)
-    vbox = VBox(hbox, padding = 1)
-    dlg = Dialog('Tags einfügen',vbox)
+    label1 = Label('Einzufügenden Tag')
+    edit1 = Edit('12345-4096', width=9)
+    vbox = VBox([label1, edit1], padding = 8)
+    dlg = Dialog('Tags einfügen', vbox, help= 'fügt den User-Tag in Grafikobjekt ein')
    
     if dlg.run():
         tag = edit1.value()
-        insTags(tag)
+    return tag
 
                    
-    
+  
 class ScoreChange(ScoreChange):
     def changeScore(self, score):
-        UserInput()
+        tag = UserInput()
+        messageBox( 'Eingabe:', 'tag: %s' % tag)
+        insTags(tag, score)
         
 if activeScore():
     activeScore().registerUndo('Tagging')
@@ -56,3 +109,4 @@ if activeScore():
     
     os.remove(tempInput)
     os.remove(tempOutput)
+
